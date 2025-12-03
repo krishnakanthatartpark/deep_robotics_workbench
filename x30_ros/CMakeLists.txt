@@ -14,6 +14,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(x30_robotserver_sdk REQUIRED)
+find_package(x30_interfaces REQUIRED)
 
 # -----------------------------
 # Executable (single-binary approach)
@@ -43,6 +44,7 @@ ament_target_dependencies(x30_hal_node_exec
   rclcpp_lifecycle
   rclcpp_components
   geometry_msgs
+  x30_interfaces
 )
 
 # -----------------------------

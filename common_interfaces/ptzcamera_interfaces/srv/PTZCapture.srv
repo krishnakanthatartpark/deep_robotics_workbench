@@ -1,0 +1,12 @@
+# Request
+float64 pan
+float64 tilt
+float64 zoom
+string mission_id
+string waypoint_id
+
+---
+# Response
+bool success
+string message
+string image_path

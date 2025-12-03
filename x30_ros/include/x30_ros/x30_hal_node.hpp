@@ -9,6 +9,7 @@
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "std_msgs/msg/int32.hpp"
+#include "x30_interfaces/srv/mode.hpp"
 
 #include <x30_robotserver_sdk/robotserver_sdk.h> // SDK header
 
@@ -41,6 +42,10 @@ private:
 
   void stateCommandCallback(const std_msgs::msg::Int32::SharedPtr msg);
 
+  // Mode service callback  
+  void modeServiceCallback(
+    const std::shared_ptr<x30_interfaces::srv::Mode::Request> request,
+    std::shared_ptr<x30_interfaces::srv::Mode::Response> response);
 
   // Motion helper that calls the SDK (thread-safely)
   void sendMotionCommand(float linear_x, float linear_y, float angular_z);
@@ -52,6 +57,9 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
 
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr state_cmd_sub_;
+
+  // Mode service server
+  rclcpp::Service<x30_interfaces::srv::Mode>::SharedPtr mode_service_;
 
   // SDK instance (constructed on configure)
   std::unique_ptr<robotserver_sdk::RobotServerSdk> sdk_;

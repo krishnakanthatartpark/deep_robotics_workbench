@@ -10,7 +10,7 @@ X30HalLifecycleNode::X30HalLifecycleNode(const rclcpp::NodeOptions & options)
 : rclcpp_lifecycle::LifecycleNode("x30_hal_lifecycle_node", options)
 {
   // declare parameters with defaults
-  this->declare_parameter<std::string>("sdk_host", "192.168.1.106");
+  this->declare_parameter<std::string>("sdk_host", "127.0.0.1");
   this->declare_parameter<int>("sdk_port", 30000);
 
   // we read parameters in on_configure to allow reconfigure later
@@ -103,10 +103,17 @@ X30HalLifecycleNode::on_activate(const rclcpp_lifecycle::State &)
     std::bind(&X30HalLifecycleNode::cmdVelCallback, this, std::placeholders::_1)
   );
 
-    // Optional: State command subscription
+  // Optional: State command subscription
   state_cmd_sub_ = this->create_subscription<std_msgs::msg::Int32>(
     "state_command", rclcpp::QoS(10),
     std::bind(&X30HalLifecycleNode::stateCommandCallback, this, std::placeholders::_1)
+  );
+
+  // Create mode service
+  mode_service_ = this->create_service<x30_interfaces::srv::Mode>(
+    "/x30_mode",
+    std::bind(&X30HalLifecycleNode::modeServiceCallback, this, 
+              std::placeholders::_1, std::placeholders::_2)
   );
 
 
@@ -309,6 +316,63 @@ void X30HalLifecycleNode::handleStateCommand(int command_id)
       RCLCPP_WARN(this->get_logger(), "Unknown State Command ID: %d", command_id);
       break;
   }
+}
+
+/**
+ * Mode service callback - maps mode strings to SDK command IDs
+ */
+void X30HalLifecycleNode::modeServiceCallback(
+  const std::shared_ptr<x30_interfaces::srv::Mode::Request> request,
+  std::shared_ptr<x30_interfaces::srv::Mode::Response> response)
+{
+  RCLCPP_INFO(this->get_logger(), "Received mode request: %s", request->mode.c_str());
+  
+  // Mode to SDK command mapping
+  std::map<std::string, int> mode_to_command{
+    {"stand", 16},       // Stand Up
+    {"sit", 15},         // Sit Down
+    {"estop", 13},       // Emergency Stop
+    {"step_start", 18},  // Start Stepping
+    {"step_stop", 14},   // Stop Stepping
+    {"switch_gait", 20}  // Switch Gait
+  };
+  
+  auto it = mode_to_command.find(request->mode);
+  if (it == mode_to_command.end()) {
+    response->success = false;
+    response->message = "Unknown mode: " + request->mode;
+    RCLCPP_WARN(this->get_logger(), "%s", response->message.c_str());
+    return;
+  }
+  
+  int command_id = it->second;
+  
+  // Execute command via SDK
+  {
+    std::lock_guard<std::mutex> lock(sdk_mutex_);
+    if (!sdk_) {
+      response->success = false;
+      response->message = "SDK object not available";
+      RCLCPP_WARN(this->get_logger(), "%s", response->message.c_str());
+      return;
+    }
+    if (!sdk_connected_.load()) {
+      response->success = false;
+      response->message = "SDK not connected";
+      RCLCPP_WARN(this->get_logger(), "%s", response->message.c_str());
+      return;
+    }
+    
+    auto cb = [logger = this->get_logger()](const robotserver_sdk::MotionControlResult &res) {
+      RCLCPP_INFO(logger, "Mode command result: errorCode=%d", static_cast<int>(res.errorCode));
+    };
+    
+    sdk_->request2_Motion_Control(command_id, -1.0f, cb);
+  }
+  
+  response->success = true;
+  response->message = "Mode '" + request->mode + "' executed (command ID: " + std::to_string(command_id) + ")";
+  RCLCPP_INFO(this->get_logger(), "%s", response->message.c_str());
 }
 
 } // namespace x30_hal

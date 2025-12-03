@@ -1,0 +1,16 @@
+# Goal
+float64 pan
+float64 tilt
+float64 zoom
+string mission_id
+string waypoint_id
+int16 aruco_id
+string gauge_id
+---
+# Result
+bool success
+string message
+string image_path
+---
+# Feedback
+float64 iter_percent

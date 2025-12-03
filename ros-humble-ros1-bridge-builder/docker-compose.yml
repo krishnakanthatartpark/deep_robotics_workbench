@@ -1,20 +1,19 @@
-version: "3.9"
-
 services:
   ros1_bridge:
+    build: .
     image: ros-humble-ros1-bridge-builder:latest
     container_name: ros1_bridge_dynamic
     network_mode: host
     environment:
-      - ROS_MASTER_URI=http://192.168.1.105:11311
-      - ROS_DOMAIN_ID=0
-      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - ROS_MASTER_URI=http://127.0.0.1:11311
+      - ROS_DOMAIN_ID=49
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
     extra_hosts:
-      - "ysc:192.168.1.105"
+      - "strider:127.0.0.1"
     volumes:
       - ./entrypoint.sh:/ros_entrypoint.sh:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /media/strider_pc/PortableSSD:/data/bags   # <-- mount SSD folder
+      # - /media/strider_pc/PortableSSD:/data/bags   # <-- mount SSD folder
     tty: true
     stdin_open: true
     command: ["/bin/bash", "/ros_entrypoint.sh"]

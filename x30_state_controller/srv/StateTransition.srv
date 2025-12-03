@@ -1,0 +1,8 @@
+# Request
+string command    # sit, stand, torque, step_start, step_stop
+---
+# Response
+bool success
+string message
+uint32 response_code
+uint32 response_value

@@ -1,0 +1,10 @@
+string stream_name
+string srt_uri
+string source
+string source_type
+int32 width
+int32 height
+int32 framerate
+---
+bool success
+string message

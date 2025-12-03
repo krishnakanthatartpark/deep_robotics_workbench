@@ -1,0 +1,9 @@
+float64 pan
+float64 tilt
+float64 zoom
+string id
+
+---
+bool success
+string message
+string image_path

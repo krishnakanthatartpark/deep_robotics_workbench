@@ -1,0 +1,7 @@
+# Request
+# (Empty request — no parameters needed)
+---
+
+# Response
+bool success
+string message

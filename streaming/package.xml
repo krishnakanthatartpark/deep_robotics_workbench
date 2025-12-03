@@ -1,16 +1,21 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>x30_ros</name>
+  <name>streaming</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="strider_pc@todo.todo">strider_pc</maintainer>
-  <license>Apache-2.0</license>
+  <maintainer email="krishnakanth@artpark.in">strider_dev</maintainer>
+  <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>x30_robotserver_sdk</depend>
-  <depend>x30_interfaces</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>rf_link_proc</depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
 
 
   <test_depend>ament_lint_auto</test_depend>

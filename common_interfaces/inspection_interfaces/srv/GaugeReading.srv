@@ -1,0 +1,14 @@
+# CaptureGaugeReading.srv
+# Description: Service to capture a gauge reading for a specific mission.
+
+# --- Request ---
+inspection_interfaces/GaugeParam param        # Gauge configuration/parameters
+string mission_id       # Identifier of the mission
+string waypoint_id
+
+---
+# --- Response ---
+bool success            # Whether the reading was successfully captured
+string status           # Status string (e.g., "in progress", "done", "error")
+float32 reading         # The captured gauge reading
+string message          # Optional message describing success/failure or additional info

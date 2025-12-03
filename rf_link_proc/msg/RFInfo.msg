@@ -1,0 +1,6 @@
+int8 signal_strength
+float32 tx_power
+uint32 frequency
+float64 estimated_distance
+float64 fresnel_radius
+string interface

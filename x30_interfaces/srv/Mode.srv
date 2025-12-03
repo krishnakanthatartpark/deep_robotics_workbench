@@ -1,0 +1,6 @@
+# Request
+string mode    # "stand", "sit", "torque", "step_start", "step_stop", "estop"
+---
+# Response
+bool success
+string message

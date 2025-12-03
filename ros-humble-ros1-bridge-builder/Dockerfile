@@ -46,6 +46,7 @@ RUN apt-get -y update
 RUN apt-get -y upgrade
 RUN apt-get -y install ros-humble-desktop
 RUN apt install -y ros-humble-control-msgs
+RUN apt-get -y install ros-humble-rmw-cyclonedds-cpp
 
 ###########################
 # 2.) Temporarily remove ROS2 apt repository
