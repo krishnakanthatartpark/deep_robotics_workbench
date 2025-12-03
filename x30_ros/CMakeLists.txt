@@ -23,6 +23,10 @@ find_package(x30_robotserver_sdk REQUIRED)
 add_executable(x30_hal_node_exec
   src/main.cpp
   src/x30_hal_node.cpp   # <-- implementation of X30HalLifecycleNode
+
+   src/transition_main.cpp
+   src/state_transition_server.cpp
+   src/udp_client.cpp
   # If your implementation file has a different name, put that here instead.
 )
 

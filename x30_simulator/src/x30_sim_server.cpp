@@ -35,9 +35,9 @@ void sendJson(tcp::socket& socket, const json& j) {
 int main() {
     try {
         boost::asio::io_context io;
-        tcp::acceptor acceptor(io, tcp::endpoint(tcp::v4(), 9000));
+        tcp::acceptor acceptor(io, tcp::endpoint(tcp::v4(), 30000));
 
-        std::cout << "[DummyServer] Listening on port 9000..." << std::endl;
+        std::cout << "[DummyServer] Listening on port 30000..." << std::endl;
 
         tcp::socket socket(io);
         acceptor.accept(socket);

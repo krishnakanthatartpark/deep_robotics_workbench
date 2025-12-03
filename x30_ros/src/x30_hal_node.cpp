@@ -10,7 +10,7 @@ X30HalLifecycleNode::X30HalLifecycleNode(const rclcpp::NodeOptions & options)
 : rclcpp_lifecycle::LifecycleNode("x30_hal_lifecycle_node", options)
 {
   // declare parameters with defaults
-  this->declare_parameter<std::string>("sdk_host", "192.168.1.106");
+  this->declare_parameter<std::string>("sdk_host", "192.168.1.106"); // 192.168.1.106 is default robot IP
   this->declare_parameter<int>("sdk_port", 30000);
 
   // we read parameters in on_configure to allow reconfigure later

@@ -14,6 +14,7 @@ CMD_FMT = "<III"  # code, value, type (uint32_t each, little-endian)
 CMD_SIT_STAND = 0x21010202
 CMD_TORQUE_CTRL = 0x2101020A
 CMD_STEP_CTRL = 0x21010201
+CMD_CRWL_CTRL = 0x21010406
 
 # === Helper: Send a single UDP command ===
 def send_command(sock, code, value=0, cmd_type=0):
@@ -41,31 +42,52 @@ def run_state_test(sock):
     print("→ Toggle Sit/Stand")
     send_command(sock, CMD_SIT_STAND)
     recv_response(sock)
-    time.sleep(3)
+    time.sleep(5)
 
-    # 2. Switch to torque control
-    print("→ Toggle Torque-Controlled Standing")
-    send_command(sock, CMD_TORQUE_CTRL)
+    # # 2. Switch to torque control
+    # print("→ Toggle Torque-Controlled Standing")
+    # send_command(sock, CMD_TORQUE_CTRL)
+    # recv_response(sock)
+    # time.sleep(5)
+
+    # # # 3. Start stepping
+    # print("→ Toggle Stepping Mode (start walking)")
+    # send_command(sock, CMD_STEP_CTRL)
+    # recv_response(sock)
+    # time.sleep(5)
+
+    # # # 4. Stop stepping (send same command again)
+    print("→ Stop Stepping")
+    send_command(sock, CMD_STEP_CTRL)
+    recv_response(sock)
+    time.sleep(5)
+
+    # # 5. Return to sitting
+    print("→ Return to Sit/Stand toggle")
+    send_command(sock, CMD_SIT_STAND)
     recv_response(sock)
     time.sleep(3)
 
-    # 3. Start stepping
+    # print("→ Toggle Sit/Stand")
+    # send_command(sock, CMD_SIT_STAND)
+    # recv_response(sock)
+    # time.sleep(5)
+
+    # # 2. Switch to torque control
+    print("→ Toggle Torque-Controlled Standing")
+    send_command(sock, CMD_TORQUE_CTRL)
+    recv_response(sock)
+    time.sleep(5)
+
     print("→ Toggle Stepping Mode (start walking)")
     send_command(sock, CMD_STEP_CTRL)
     recv_response(sock)
     time.sleep(5)
 
-    # 4. Stop stepping (send same command again)
-    print("→ Stop Stepping")
-    send_command(sock, CMD_STEP_CTRL)
+    print("→ Toggle Crawl Mode")
+    send_command(sock, CMD_CRWL_CTRL)
     recv_response(sock)
-    time.sleep(3)
-
-    # 5. Return to sitting
-    print("→ Return to Sit/Stand toggle")
-    send_command(sock, CMD_SIT_STAND)
-    recv_response(sock)
-    time.sleep(3)
+    time.sleep(5)
 
     print("\n✅ State transition test complete.")
 
