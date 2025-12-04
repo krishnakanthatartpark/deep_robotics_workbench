@@ -19,55 +19,55 @@ udp_client_ = std::make_unique<UdpClient>(ip, port, timeout);
 udp_client_->set_logger(shared_from_this());
 
 
-sit_stand_srv_ = create_service<Trigger>("/cmd/sit_stand",
+sit_stand_srv_ = create_service<Mode>("/stand_sequence",
 std::bind(&StateTransitionServer::handle_sit_stand, this, _1, _2));
 
 
-torque_srv_ = create_service<Trigger>("/cmd/torque_ctrl",
+torque_srv_ = create_service<Mode>("/sit_sequence",
 std::bind(&StateTransitionServer::handle_torque_ctrl, this, _1, _2));
 
 
-step_srv_ = create_service<Trigger>("/cmd/step_ctrl",
+step_srv_ = create_service<Mode>("/torque_ctrl",
 std::bind(&StateTransitionServer::handle_step_ctrl, this, _1, _2));
 
 
-crawl_srv_ = create_service<Trigger>("/cmd/crawl_ctrl",
+crawl_srv_ = create_service<Mode>("/crawl_ctrl",
 std::bind(&StateTransitionServer::handle_crawl_ctrl, this, _1, _2));
 
 
-sequence_srv_ = create_service<Trigger>("/cmd/run_sequence",
+sequence_srv_ = create_service<Mode>("/stepping_sequence",
 std::bind(&StateTransitionServer::handle_run_sequence, this, _1, _2));
 }
 
 
-void StateTransitionServer::send_and_fill(uint32_t code, Trigger::Response::SharedPtr res) {
+void StateTransitionServer::send_and_fill(uint32_t code, Mode::Response::SharedPtr res) {
 bool ok = udp_client_->send_command(code);
 res->success = ok;
 res->message = ok ? "sent" : "failed";
 }
 
 
-void StateTransitionServer::handle_sit_stand(const std::shared_ptr<Trigger::Request>, std::shared_ptr<Trigger::Response> r) {
+void StateTransitionServer::handle_sit_stand(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
 send_and_fill(CMD_SIT_STAND, r);
 }
 
 
-void StateTransitionServer::handle_torque_ctrl(const std::shared_ptr<Trigger::Request>, std::shared_ptr<Trigger::Response> r) {
+void StateTransitionServer::handle_torque_ctrl(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
 send_and_fill(CMD_TORQUE_CTRL, r);
 }
 
 
-void StateTransitionServer::handle_step_ctrl(const std::shared_ptr<Trigger::Request>, std::shared_ptr<Trigger::Response> r) {
+void StateTransitionServer::handle_step_ctrl(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
 send_and_fill(CMD_STEP_CTRL, r);
 }
 
 
-void StateTransitionServer::handle_crawl_ctrl(const std::shared_ptr<Trigger::Request>, std::shared_ptr<Trigger::Response> r) {
+void StateTransitionServer::handle_crawl_ctrl(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
 send_and_fill(CMD_CRWL_CTRL, r);
 }
 
 
-void StateTransitionServer::handle_run_sequence(const std::shared_ptr<Trigger::Request>, std::shared_ptr<Trigger::Response> r) {
+void StateTransitionServer::handle_run_sequence(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
 std::thread([this]() {
 using namespace std::chrono_literals;
 udp_client_->send_command(CMD_SIT_STAND);
