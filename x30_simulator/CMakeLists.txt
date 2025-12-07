@@ -13,6 +13,8 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(nlohmann_json REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
+find_package(rclcpp REQUIRED)
+
 
 # ------------------------------------------------------------------------------
 # Executable 1: Basic JSON-based Simulator
@@ -37,12 +39,21 @@ target_link_libraries(x30_sim_server_state_transitions
 )
 target_compile_features(x30_sim_server_state_transitions PUBLIC cxx_std_17)
 
+add_executable(x30_udp_server src/x30_udp_server.cpp)
+target_link_libraries(x30_udp_server
+  Boost::system
+  Boost::thread
+)
+ament_target_dependencies(x30_udp_server rclcpp)
+target_compile_features(x30_udp_server PUBLIC cxx_std_17)
+
 # ------------------------------------------------------------------------------
 # Install Targets
 # ------------------------------------------------------------------------------
 install(TARGETS
   x30_sim_server
   x30_sim_server_state_transitions
+  x30_udp_server
   DESTINATION lib/${PROJECT_NAME}
 )
 

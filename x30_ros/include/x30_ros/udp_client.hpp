@@ -9,8 +9,6 @@
 #include <memory>
 
 
-static std::string hex_u32(uint32_t v);
-
 
 struct UdpPacket {
 uint32_t code;

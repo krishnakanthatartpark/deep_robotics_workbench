@@ -7,36 +7,30 @@ static constexpr uint32_t CMD_SIT_STAND = 0x21010202;
 static constexpr uint32_t CMD_TORQUE_CTRL = 0x2101020A;
 static constexpr uint32_t CMD_STEP_CTRL = 0x21010201;
 static constexpr uint32_t CMD_CRWL_CTRL = 0x21010406;
+static constexpr uint32_t SWITCH_VEL_SRC = 0x3101EE03;
 
 
 StateTransitionServer::StateTransitionServer() : Node("state_transition_server") {
-std::string ip = this->declare_parameter("motion_ip", "192.168.1.103");
+std::string ip = this->declare_parameter("motion_ip", "0.0.0.0"); 
 int port = this->declare_parameter("motion_port", 43893);
 double timeout = this->declare_parameter("recv_timeout_sec", 0.5);
 
 
 udp_client_ = std::make_unique<UdpClient>(ip, port, timeout);
-udp_client_->set_logger(shared_from_this());
+logger_init_timer_ = this->create_wall_timer(
+      std::chrono::milliseconds(100),
+      [this]() {
+        udp_client_->set_logger(shared_from_this());
+        logger_init_timer_->cancel();
+        RCLCPP_INFO(this->get_logger(), "Logger attached to UDP client");
+      }
+  );
 
 
-sit_stand_srv_ = create_service<Mode>("/stand_sequence",
-std::bind(&StateTransitionServer::handle_sit_stand, this, _1, _2));
+set_mode_srv_ = create_service<Mode>("/set_mode",
+std::bind(&StateTransitionServer::handle_set_mode, this, std::placeholders::_1, std::placeholders::_2));
 
 
-torque_srv_ = create_service<Mode>("/sit_sequence",
-std::bind(&StateTransitionServer::handle_torque_ctrl, this, _1, _2));
-
-
-step_srv_ = create_service<Mode>("/torque_ctrl",
-std::bind(&StateTransitionServer::handle_step_ctrl, this, _1, _2));
-
-
-crawl_srv_ = create_service<Mode>("/crawl_ctrl",
-std::bind(&StateTransitionServer::handle_crawl_ctrl, this, _1, _2));
-
-
-sequence_srv_ = create_service<Mode>("/stepping_sequence",
-std::bind(&StateTransitionServer::handle_run_sequence, this, _1, _2));
 }
 
 
@@ -47,43 +41,72 @@ res->message = ok ? "sent" : "failed";
 }
 
 
-void StateTransitionServer::handle_sit_stand(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
-send_and_fill(CMD_SIT_STAND, r);
-}
 
 
-void StateTransitionServer::handle_torque_ctrl(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
-send_and_fill(CMD_TORQUE_CTRL, r);
-}
+void StateTransitionServer::handle_set_mode(const std::shared_ptr<Mode::Request> request, std::shared_ptr<Mode::Response> response) {
+  std::string mode = request->mode;
+
+  using namespace std::chrono_literals;
+
+  // <-- Logger added here to capture every mode request
+  RCLCPP_INFO(this->get_logger(), "Mode service called with mode: '%s'", mode.c_str());
 
 
-void StateTransitionServer::handle_step_ctrl(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
-send_and_fill(CMD_STEP_CTRL, r);
-}
+  if (mode == "stand_up") {
+    response->message = "Change the mode to stand_up";
+    std::thread([this]() {
+        udp_client_->send_command(CMD_STEP_CTRL);
+        std::this_thread::sleep_for(5s); 
+        udp_client_->send_command(CMD_SIT_STAND); 
+    }).detach();
+  } else if (mode == "stand_down") {
+    response->message = "Change the mode to stand_down";
+    std::thread([this]() {
+        udp_client_->send_command(CMD_STEP_CTRL);
+        std::this_thread::sleep_for(5s); 
+        udp_client_->send_command(CMD_SIT_STAND); 
+    }).detach();
+  } else if (mode == "stand_up_step") {
+    std::thread([this]() {
+        udp_client_->send_command(CMD_STEP_CTRL);
+        std::this_thread::sleep_for(5s); 
+        udp_client_->send_command(CMD_SIT_STAND); 
+        std::this_thread::sleep_for(5s); 
+        udp_client_->send_command(CMD_TORQUE_CTRL);
+        std::this_thread::sleep_for(5s); 
+        udp_client_->send_command(CMD_STEP_CTRL);
 
+    }).detach();
+  } else if (mode == "crawl") {
+    response->message = "Change the mode to crawl";
+    std::thread([this]() {
+        udp_client_->send_command(CMD_CRWL_CTRL);
+    }).detach();
+    
+  }
+   else if (mode == "navigation_mode") {
+    response->message = "Change the mode to navigation_mode";
+    std::thread([this]() {
+        udp_client_->send_command(SWITCH_VEL_SRC, 2);
+    }).detach();
+    
+  }
 
-void StateTransitionServer::handle_crawl_ctrl(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
-send_and_fill(CMD_CRWL_CTRL, r);
-}
+  else if (mode == "joystick_mode") {
+    response->message = "Change the mode to navigation_mode";
+    std::thread([this]() {
+        udp_client_->send_command(SWITCH_VEL_SRC, 1);
+    }).detach();
+    
+  }
 
+  else {
+    // <-- Warning logger for invalid modes
+    RCLCPP_WARN(this->get_logger(), "Invalid mode requested: '%s'", mode.c_str());
+    response->success = false;
+    response->message = "Invalid mode";
+    return;
+  }
 
-void StateTransitionServer::handle_run_sequence(const std::shared_ptr<Mode::Request>, std::shared_ptr<Mode::Response> r) {
-std::thread([this]() {
-using namespace std::chrono_literals;
-udp_client_->send_command(CMD_SIT_STAND);
-std::this_thread::sleep_for(5s);
-udp_client_->send_command(CMD_STEP_CTRL);
-std::this_thread::sleep_for(5s);
-udp_client_->send_command(CMD_SIT_STAND);
-std::this_thread::sleep_for(3s);
-udp_client_->send_command(CMD_TORQUE_CTRL);
-std::this_thread::sleep_for(5s);
-udp_client_->send_command(CMD_STEP_CTRL);
-std::this_thread::sleep_for(5s);
-udp_client_->send_command(CMD_CRWL_CTRL);
-}).detach();
-
-
-r->success = true;
-r->message = "sequence started";
+  response->success = true;
 }
